@@ -1,0 +1,29 @@
+@import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
+
+/* Hide TradingView logo */
+.tv-lightweight-charts a {
+  display: none !important;
+}
+
+/* Light mode autofill */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #f9fafb inset !important;
+  -webkit-text-fill-color: #111827 !important;
+  caret-color: #111827 !important;
+  border-color: #d1d5db !important;
+}
+
+/* Dark mode autofill */
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #1f2937 inset !important;
+  -webkit-text-fill-color: white !important;
+  caret-color: white !important;
+  border-color: #374151 !important;
+}
