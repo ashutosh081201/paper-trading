@@ -2,7 +2,7 @@
 
 StockLab is a paper-trading platform for the Indian stock market. You sign up, get ₹1,00,000 of virtual cash, and buy and sell NSE stocks at live market prices — delivery or intraday, with stop-loss and target orders, price alerts, watchlists and a portfolio analytics page. No real money is involved.
 
-**Live demo:** _coming soon_
+**Live demo:** [paper-trading-eight-zeta.vercel.app](https://paper-trading-eight-zeta.vercel.app) — sign up with any email you can receive an OTP at. The API runs on Render's free tier, so the first request after a quiet spell can take up to a minute.
 
 ![Stock list with live index prices](docs/screenshots/stock-list.jpg)
 
