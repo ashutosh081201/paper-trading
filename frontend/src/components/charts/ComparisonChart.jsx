@@ -218,7 +218,11 @@ const ComparisonChart = ({ symbol, companyName }) => {
     setSearching(true);
     try {
       const res = await searchStocks(query);
-      setSearchResults(res.data.results.slice(0, 8));
+      // Indices can come back from both the local list and the provider
+      const unique = res.data.results.filter(
+        (r, i, all) => all.findIndex((x) => x.symbol === r.symbol) === i,
+      );
+      setSearchResults(unique.slice(0, 8));
       setShowResults(true);
     } catch {
       setSearchResults([]);

@@ -13,6 +13,20 @@ const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
+const MIN_PASSWORD_LENGTH = 6;
+
+// New passwords only; login still accepts whatever password an account has
+const requireNewPassword = (value) => {
+  const password = requireString(value, "Password", { max: 128 });
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    throw new HttpError(
+      400,
+      `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
+    );
+  }
+  return password;
+};
+
 const requireEmail = (value) =>
   requireString(value, "Email", { max: 254 }).toLowerCase();
 
@@ -64,7 +78,7 @@ const signup = async (req, res) => {
     }
     const cleanName = requireString(name, "Name", { max: 60 });
     const cleanEmail = requireEmail(email);
-    const cleanPassword = requireString(password, "Password", { max: 128 });
+    const cleanPassword = requireNewPassword(password);
 
     const hashedPassword = await bcrypt.hash(cleanPassword, 10);
     const existingUser = await User.findOne({ email: cleanEmail });
@@ -105,7 +119,12 @@ const verifyOTP = async (req, res) => {
       return res.status(400).json({ message: "Email and OTP are required" });
     }
     const cleanEmail = requireEmail(email);
-    await consumeOTP(cleanEmail, String(otp), "verify", "Please sign up again.");
+    await consumeOTP(
+      cleanEmail,
+      String(otp),
+      "verify",
+      "Please sign up again.",
+    );
     await User.findOneAndUpdate({ email: cleanEmail }, { isVerified: true });
     res
       .status(200)
@@ -192,7 +211,9 @@ const forgotPassword = async (req, res) => {
         .json({ message: "No account found with this email" });
     }
     await issueOTP(cleanEmail, "reset");
-    res.status(200).json({ message: "OTP sent to your email.", email: cleanEmail });
+    res
+      .status(200)
+      .json({ message: "OTP sent to your email.", email: cleanEmail });
   } catch (error) {
     sendError(res, error, "Sending the OTP");
   }
@@ -206,10 +227,18 @@ const resetPassword = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
     const cleanEmail = requireEmail(email);
-    const cleanPassword = requireString(newPassword, "Password", { max: 128 });
-    await consumeOTP(cleanEmail, String(otp), "reset", "Please request a new code.");
+    const cleanPassword = requireNewPassword(newPassword);
+    await consumeOTP(
+      cleanEmail,
+      String(otp),
+      "reset",
+      "Please request a new code.",
+    );
     const hashedPassword = await bcrypt.hash(cleanPassword, 10);
-    await User.findOneAndUpdate({ email: cleanEmail }, { password: hashedPassword });
+    await User.findOneAndUpdate(
+      { email: cleanEmail },
+      { password: hashedPassword },
+    );
     res
       .status(200)
       .json({ message: "Password reset successfully. Please login." });

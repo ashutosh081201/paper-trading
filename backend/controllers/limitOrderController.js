@@ -4,6 +4,7 @@ const Holding = require("../models/Holding");
 const Order = require("../models/Order");
 const { INTRADAY_LEVERAGE } = require("../services/trading");
 const { sendError } = require("../helpers/httpErrors");
+const { formatINR } = require("../helpers/format");
 const {
   requireString,
   requireQuantity,
@@ -13,7 +14,11 @@ const {
 } = require("../helpers/validate");
 
 // LIMIT_BUY waits for a lower price; STOP_LOSS / TARGET sell existing shares
-const SIDE_FOR_LIMIT_TYPE = { LIMIT_BUY: "buy", STOP_LOSS: "sell", TARGET: "sell" };
+const SIDE_FOR_LIMIT_TYPE = {
+  LIMIT_BUY: "buy",
+  STOP_LOSS: "sell",
+  TARGET: "sell",
+};
 
 const createLimitOrder = async (req, res) => {
   try {
@@ -42,9 +47,21 @@ const createLimitOrder = async (req, res) => {
     const order = {
       symbol: requireTradableSymbol(symbol),
       companyName: requireString(companyName, "Company name"),
-      orderType: requireOneOf(orderType, ["delivery", "intraday"], "order type"),
-      limitType: requireOneOf(limitType, Object.keys(SIDE_FOR_LIMIT_TYPE), "limit type"),
-      transactionType: requireOneOf(transactionType, ["buy", "sell"], "transaction type"),
+      orderType: requireOneOf(
+        orderType,
+        ["delivery", "intraday"],
+        "order type",
+      ),
+      limitType: requireOneOf(
+        limitType,
+        Object.keys(SIDE_FOR_LIMIT_TYPE),
+        "limit type",
+      ),
+      transactionType: requireOneOf(
+        transactionType,
+        ["buy", "sell"],
+        "transaction type",
+      ),
       triggerPrice: requirePositiveNumber(triggerPrice, "Trigger price"),
       quantity: requireQuantity(quantity),
     };
@@ -81,12 +98,15 @@ const createLimitOrder = async (req, res) => {
           : order.triggerPrice * order.quantity;
       if (user.funds < totalCost) {
         return res.status(400).json({
-          message: `Insufficient funds. Required: ₹${totalCost.toFixed(2)}, Available: ₹${user.funds.toFixed(2)}`,
+          message: `Insufficient funds. Required: ${formatINR(totalCost)}, Available: ${formatINR(user.funds)}`,
         });
       }
     }
 
-    const limitOrder = await LimitOrder.create({ userId: req.userId, ...order });
+    const limitOrder = await LimitOrder.create({
+      userId: req.userId,
+      ...order,
+    });
 
     res.status(201).json({
       message: "Limit order placed successfully",

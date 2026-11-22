@@ -2,12 +2,14 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { resetPassword } from "../services/api";
 import { useTheme } from "../context/ThemeContext";
+import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { darkMode, toggleTheme } = useTheme();
+  const { user } = useAuth();
   const email = location.state?.email || "";
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -247,17 +249,19 @@ const ResetPassword = () => {
           </p>
         </div>
 
-        {/* Footer */}
-        <p
-          className={`text-center text-sm mt-6 ${
-            darkMode ? "text-gray-300" : "text-gray-500"
-          }`}
-        >
-          Made with <span className="text-red-400 text-base">❤️</span> by{" "}
-          <span className="text-green-400 font-bold tracking-wide">
-            Ashutosh
-          </span>
-        </p>
+        {/* Footer (signed-in pages already get the app footer) */}
+        {!user && (
+          <p
+            className={`text-center text-sm mt-6 ${
+              darkMode ? "text-gray-300" : "text-gray-500"
+            }`}
+          >
+            Made with <span className="text-red-400 text-base">❤️</span> by{" "}
+            <span className="text-green-400 font-bold tracking-wide">
+              Ashutosh
+            </span>
+          </p>
+        )}
       </div>
     </div>
   );

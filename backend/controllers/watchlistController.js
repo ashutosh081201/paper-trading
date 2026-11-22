@@ -1,9 +1,11 @@
 const Watchlist = require("../models/Watchlist");
 const { getQuote } = require("../helpers/stockHelper");
 const { sendError } = require("../helpers/httpErrors");
+const { displaySymbol } = require("../helpers/format");
 const { requireString, requireSymbol } = require("../helpers/validate");
 
-const requireName = (name) => requireString(name, "Watchlist name", { max: 40 });
+const requireName = (name) =>
+  requireString(name, "Watchlist name", { max: 40 });
 
 const MAX_WATCHLIST_SIZE = 20;
 const MAX_WATCHLISTS = 5;
@@ -221,7 +223,7 @@ const addToWatchlistById = async (req, res) => {
     );
     if (exists) {
       return res.status(400).json({
-        message: `${symbol} already in this watchlist`,
+        message: `${displaySymbol(symbol)} already in this watchlist`,
       });
     }
 
@@ -229,7 +231,7 @@ const addToWatchlistById = async (req, res) => {
     await watchlist.save();
 
     res.status(200).json({
-      message: `${symbol} added`,
+      message: `${displaySymbol(symbol)} added`,
       count: watchlist.stocks.length,
     });
   } catch (error) {
@@ -252,12 +254,14 @@ const removeFromWatchlistById = async (req, res) => {
     );
 
     if (watchlist.stocks.length === initial) {
-      return res.status(404).json({ message: `${symbol} not found` });
+      return res
+        .status(404)
+        .json({ message: `${displaySymbol(symbol)} not found` });
     }
 
     await watchlist.save();
     res.status(200).json({
-      message: `${symbol} removed`,
+      message: `${displaySymbol(symbol)} removed`,
       count: watchlist.stocks.length,
     });
   } catch (error) {
@@ -348,7 +352,7 @@ const addToWatchlist = async (req, res) => {
     );
     if (exists) {
       return res.status(400).json({
-        message: `${symbol} is already in your watchlist`,
+        message: `${displaySymbol(symbol)} is already in your watchlist`,
       });
     }
 
@@ -356,7 +360,7 @@ const addToWatchlist = async (req, res) => {
     await watchlist.save();
 
     res.status(200).json({
-      message: `${symbol} added to watchlist`,
+      message: `${displaySymbol(symbol)} added to watchlist`,
       count: watchlist.stocks.length,
     });
   } catch (error) {
@@ -382,13 +386,13 @@ const removeFromWatchlist = async (req, res) => {
 
     if (watchlist.stocks.length === initial) {
       return res.status(404).json({
-        message: `${symbol} not found in watchlist`,
+        message: `${displaySymbol(symbol)} not found in watchlist`,
       });
     }
 
     await watchlist.save();
     res.status(200).json({
-      message: `${symbol} removed`,
+      message: `${displaySymbol(symbol)} removed`,
       count: watchlist.stocks.length,
     });
   } catch (error) {

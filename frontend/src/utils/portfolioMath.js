@@ -31,12 +31,18 @@ export const calculateXIRR = (cashFlows, dates) => {
   return rate;
 };
 
-export const computeXIRR = (transactions, holdings) => {
+// Annualising a few days of returns gives meaningless numbers (e.g. -99%)
+export const XIRR_MIN_DAYS = 30;
+
+// XIRR over delivery trades plus today's holdings value. Intraday trades are
+// left out: they open and close the same day and only margin is paid.
+export const computeXIRR = (transactions, holdings, now = new Date()) => {
   try {
     if (!transactions || transactions.length === 0) return null;
     const cashFlows = [];
     const dates = [];
     transactions.forEach((t) => {
+      if (t.orderType === "intraday") return;
       if (t.transactionType === "buy") {
         cashFlows.push(-Math.abs(t.totalAmount));
         dates.push(new Date(t.createdAt));
@@ -51,11 +57,13 @@ export const computeXIRR = (transactions, holdings) => {
     );
     if (holdingsValue > 0) {
       cashFlows.push(holdingsValue);
-      dates.push(new Date());
+      dates.push(now);
     }
     if (cashFlows.length < 2) return null;
     const combined = cashFlows.map((cf, i) => ({ cf, date: dates[i] }));
     combined.sort((a, b) => a.date - b.date);
+    const spanDays = (combined.at(-1).date - combined[0].date) / 86400000;
+    if (spanDays < XIRR_MIN_DAYS) return null;
     const result = calculateXIRR(
       combined.map((c) => c.cf),
       combined.map((c) => c.date),

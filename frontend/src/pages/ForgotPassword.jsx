@@ -19,7 +19,6 @@ const ForgotPassword = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -216,17 +215,19 @@ const ForgotPassword = () => {
           </p>
         </div>
 
-        {/* Footer */}
-        <p
-          className={`text-center text-sm mt-6 ${
-            darkMode ? "text-gray-300" : "text-gray-500"
-          }`}
-        >
-          Made with <span className="text-red-400 text-base">❤️</span> by{" "}
-          <span className="text-green-400 font-bold tracking-wide">
-            Ashutosh
-          </span>
-        </p>
+        {/* Footer (signed-in pages already get the app footer) */}
+        {!user && (
+          <p
+            className={`text-center text-sm mt-6 ${
+              darkMode ? "text-gray-300" : "text-gray-500"
+            }`}
+          >
+            Made with <span className="text-red-400 text-base">❤️</span> by{" "}
+            <span className="text-green-400 font-bold tracking-wide">
+              Ashutosh
+            </span>
+          </p>
+        )}
       </div>
     </div>
   );

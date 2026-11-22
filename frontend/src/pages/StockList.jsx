@@ -170,10 +170,16 @@ const StockList = () => {
       await addToWatchlistById(watchlistId, { symbol, companyName });
       setAllWatchlists((prev) =>
         prev.map((w) =>
-          w._id === watchlistId ? { ...w, count: w.count + 1 } : w,
+          w._id === watchlistId
+            ? {
+                ...w,
+                count: w.count + 1,
+                symbols: [...(w.symbols || []), symbol.toUpperCase()],
+              }
+            : w,
         ),
       );
-      notify(`${symbol} added to "${watchlistName}"`, "success");
+      notify(`${displaySymbol(symbol)} added to "${watchlistName}"`, "success");
     } catch (error) {
       notify(error.response?.data?.message || "Failed to add", "error");
     } finally {
@@ -548,6 +554,9 @@ const StockList = () => {
           watchlists={allWatchlists}
           symbol={pickerStock.symbol}
           companyName={pickerStock.companyName}
+          symbolsByWatchlist={Object.fromEntries(
+            allWatchlists.map((w) => [w._id, new Set(w.symbols || [])]),
+          )}
           onSelect={handlePickerSelect}
           onClose={() => setPickerStock(null)}
         />

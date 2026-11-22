@@ -144,7 +144,10 @@ const MonthlyPnLChart = ({ transactions }) => {
             }`}
           >
             {totalPnL >= 0 ? "+" : ""}₹
-            {parseFloat(totalPnL.toFixed(2))?.toLocaleString("en-IN")}
+            {parseFloat(totalPnL.toFixed(2))?.toLocaleString(
+              "en-IN",
+              INR_FORMAT,
+            )}
           </p>
         </div>
 
@@ -204,7 +207,8 @@ const MonthlyPnLChart = ({ transactions }) => {
                   m.pnl >= 0 ? "text-green-500" : "text-red-500"
                 }`}
               >
-                {m.pnl >= 0 ? "+" : ""}₹{m.pnl?.toLocaleString("en-IN", INR_FORMAT)}
+                {m.pnl >= 0 ? "+" : ""}₹
+                {m.pnl?.toLocaleString("en-IN", INR_FORMAT)}
               </span>
             </div>
           </div>

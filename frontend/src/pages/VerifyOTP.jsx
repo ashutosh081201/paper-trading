@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { verifyOTP } from "../services/api";
 import { useTheme } from "../context/ThemeContext";
-import { toast } from "react-toastify";
 
 const VerifyOTP = () => {
   const navigate = useNavigate();
@@ -11,27 +10,35 @@ const VerifyOTP = () => {
   const email = location.state?.email || "";
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
-    if (!otp) {
-      toast.error("Please enter OTP");
+    if (!email) {
+      setError("We don't know which email to verify. Please sign up again.");
       return;
     }
 
-    if (otp.length !== 6) {
-      toast.error("OTP must be 6 digits");
+    if (!otp) {
+      setError("Please enter OTP");
+      return;
+    }
+
+    if (!/^\d{6}$/.test(otp)) {
+      setError("OTP must be 6 digits");
       return;
     }
 
     setLoading(true);
     try {
       const res = await verifyOTP({ email, otp });
-      toast.success(res.data.message);
-      navigate("/login");
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Verification failed");
+      setSuccess(res.data.message);
+      setTimeout(() => navigate("/login"), 1500);
+    } catch (err) {
+      setError(err.response?.data?.message || "Verification failed");
     } finally {
       setLoading(false);
     }
@@ -86,6 +93,22 @@ const VerifyOTP = () => {
             Valid for 10 minutes
           </p>
 
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3 mb-4">
+              <p className="text-red-600 dark:text-red-400 text-sm">
+                ❌ {error}
+              </p>
+            </div>
+          )}
+
+          {success && (
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg px-4 py-3 mb-4">
+              <p className="text-green-600 dark:text-green-400 text-sm">
+                ✅ {success}
+              </p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label
@@ -111,7 +134,7 @@ const VerifyOTP = () => {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !!success}
               className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg transition"
             >
               {loading ? "Verifying..." : "Verify OTP"}
@@ -124,12 +147,13 @@ const VerifyOTP = () => {
             }`}
           >
             Wrong email?{" "}
-            <span
+            <button
+              type="button"
               onClick={() => navigate("/signup")}
               className="text-green-400 hover:text-green-300 font-medium cursor-pointer"
             >
               Go back to Signup
-            </span>
+            </button>
           </p>
         </div>
 

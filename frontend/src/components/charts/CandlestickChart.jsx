@@ -134,8 +134,8 @@ const CandlestickChart = ({ symbol }) => {
         .timeScale()
         .applyOptions({ barSpacing: barSpacingRef.current });
     } catch {
-  // the indicator chart may already have been removed
-}
+      // the indicator chart may already have been removed
+    }
   };
 
   const syncAllToMain = () => {
@@ -148,30 +148,30 @@ const CandlestickChart = ({ symbol }) => {
         try {
           rsiChartRef.current.timeScale().setVisibleRange(range);
         } catch {
-  // the indicator chart may already have been removed
-}
+          // the indicator chart may already have been removed
+        }
       if (macdChartRef.current)
         try {
           macdChartRef.current.timeScale().setVisibleRange(range);
         } catch {
-  // the indicator chart may already have been removed
-}
+          // the indicator chart may already have been removed
+        }
       if (stochChartRef.current)
         try {
           stochChartRef.current.timeScale().setVisibleRange(range);
         } catch {
-  // the indicator chart may already have been removed
-}
+          // the indicator chart may already have been removed
+        }
       if (obvChartRef.current)
         try {
           obvChartRef.current.timeScale().setVisibleRange(range);
         } catch {
-  // the indicator chart may already have been removed
-}
+          // the indicator chart may already have been removed
+        }
       syncingRef.current = false;
     } catch {
-  // the indicator chart may already have been removed
-}
+      // the indicator chart may already have been removed
+    }
   };
 
   const getIndicatorChartOpts = (colors, showTime) => ({
@@ -214,36 +214,36 @@ const CandlestickChart = ({ symbol }) => {
           .timeScale()
           .applyOptions({ barSpacing: barSpacingRef.current });
       } catch {
-  // the indicator chart may already have been removed
-}
+        // the indicator chart may already have been removed
+      }
       if (rsiChartRef.current && rsiChartRef !== selfChartRef)
         try {
           rsiChartRef.current.timeScale().setVisibleRange(range);
         } catch {
-  // the indicator chart may already have been removed
-}
+          // the indicator chart may already have been removed
+        }
       if (macdChartRef.current && macdChartRef !== selfChartRef)
         try {
           macdChartRef.current.timeScale().setVisibleRange(range);
         } catch {
-  // the indicator chart may already have been removed
-}
+          // the indicator chart may already have been removed
+        }
       if (stochChartRef.current && stochChartRef !== selfChartRef)
         try {
           stochChartRef.current.timeScale().setVisibleRange(range);
         } catch {
-  // the indicator chart may already have been removed
-}
+          // the indicator chart may already have been removed
+        }
       if (obvChartRef.current && obvChartRef !== selfChartRef)
         try {
           obvChartRef.current.timeScale().setVisibleRange(range);
         } catch {
-  // the indicator chart may already have been removed
-}
+          // the indicator chart may already have been removed
+        }
       syncingRef.current = false;
     } catch {
-  // the indicator chart may already have been removed
-}
+      // the indicator chart may already have been removed
+    }
   };
 
   // Initialize main chart ONCE
@@ -261,7 +261,12 @@ const CandlestickChart = ({ symbol }) => {
         horzLines: { color: colors.grid },
       },
       crosshair: { mode: 1 },
-      rightPriceScale: { borderColor: colors.border, textColor: colors.text },
+      // Candles use the top ~75%; volume has the band below them
+      rightPriceScale: {
+        borderColor: colors.border,
+        textColor: colors.text,
+        scaleMargins: { top: 0.08, bottom: 0.25 },
+      },
       timeScale: {
         borderColor: colors.border,
         textColor: colors.text,
@@ -283,6 +288,10 @@ const CandlestickChart = ({ symbol }) => {
     const volumeSeries = chart.addSeries(HistogramSeries, {
       priceFormat: { type: "volume" },
       priceScaleId: "volume",
+    });
+    // Keep volume in the bottom 20% so tall bars never cover the candles
+    // (scale margins belong to the price scale, not the series)
+    chart.priceScale("volume").applyOptions({
       scaleMargins: { top: 0.8, bottom: 0 },
     });
 
@@ -313,30 +322,30 @@ const CandlestickChart = ({ symbol }) => {
           try {
             rsiChartRef.current.timeScale().setVisibleRange(range);
           } catch {
-  // the indicator chart may already have been removed
-}
+            // the indicator chart may already have been removed
+          }
         if (macdChartRef.current)
           try {
             macdChartRef.current.timeScale().setVisibleRange(range);
           } catch {
-  // the indicator chart may already have been removed
-}
+            // the indicator chart may already have been removed
+          }
         if (stochChartRef.current)
           try {
             stochChartRef.current.timeScale().setVisibleRange(range);
           } catch {
-  // the indicator chart may already have been removed
-}
+            // the indicator chart may already have been removed
+          }
         if (obvChartRef.current)
           try {
             obvChartRef.current.timeScale().setVisibleRange(range);
           } catch {
-  // the indicator chart may already have been removed
-}
+            // the indicator chart may already have been removed
+          }
         syncingRef.current = false;
       } catch {
-  // the indicator chart may already have been removed
-}
+        // the indicator chart may already have been removed
+      }
     });
 
     const resizeObserver = new ResizeObserver(() => {
@@ -759,8 +768,8 @@ const CandlestickChart = ({ symbol }) => {
           try {
             chartRef.current.removeSeries(ref.current);
           } catch {
-  // the indicator chart may already have been removed
-}
+            // the indicator chart may already have been removed
+          }
           ref.current = null;
         }
       });
@@ -772,7 +781,7 @@ const CandlestickChart = ({ symbol }) => {
         20,
         2,
       );
-     
+
       if (candleDataRef.current.length < 20) {
         setBbWarning(
           `BB needs at least 20 candles — only ${candleDataRef.current.length} available. Switch to 1W or longer.`,
@@ -883,8 +892,8 @@ const CandlestickChart = ({ symbol }) => {
         try {
           chartRef.current.removeSeries(maSeriesRefs.current[key]);
         } catch {
-  // the indicator chart may already have been removed
-}
+          // the indicator chart may already have been removed
+        }
         delete maSeriesRefs.current[key];
       }
       setActiveMAs((prev) => prev.filter((m) => m !== key));
@@ -963,8 +972,8 @@ const CandlestickChart = ({ symbol }) => {
           try {
             chartRef.current.removeSeries(maSeriesRefs.current[key]);
           } catch {
-  // the indicator chart may already have been removed
-}
+            // the indicator chart may already have been removed
+          }
           delete maSeriesRefs.current[key];
           masToRemove.push(key);
           return;

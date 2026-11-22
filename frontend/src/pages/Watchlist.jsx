@@ -49,7 +49,6 @@ const Watchlist = () => {
 
   const subscribedSymbolsRef = useRef([]);
 
-
   // Socket: listen for price updates
   useEffect(() => {
     const cleanup = onPriceUpdate((updates) => {
@@ -144,7 +143,7 @@ const Watchlist = () => {
       subscribedSymbolsRef.current = subscribedSymbolsRef.current.filter(
         (s) => s !== symbol,
       );
-      notify(`${symbol} removed from watchlist`, "success");
+      notify(`${displaySymbol(symbol)} removed from watchlist`, "success");
     } catch (error) {
       notify(error.response?.data?.message || "Failed to remove", "error");
     } finally {
@@ -534,7 +533,7 @@ const Watchlist = () => {
 
       {/* Create Watchlist Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 px-4">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
           <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 w-full max-w-sm p-6 shadow-2xl">
             <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
               Create New Watchlist

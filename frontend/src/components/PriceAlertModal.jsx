@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { createAlert, getAlerts, deleteAlert } from "../services/api";
 import { displaySymbol } from "../utils/displaySymbol";
+import { INR_FORMAT } from "../utils/formatINR";
 
 const PriceAlertModal = ({ quote, onClose }) => {
   const [alerts, setAlerts] = useState([]);
@@ -60,6 +61,7 @@ const PriceAlertModal = ({ quote, onClose }) => {
   };
 
   const handleDelete = async (id) => {
+    if (!window.confirm("Delete this price alert?")) return;
     try {
       await deleteAlert(id);
       setAlerts((prev) => prev.filter((a) => a._id !== id));
@@ -69,7 +71,7 @@ const PriceAlertModal = ({ quote, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-end sm:items-center justify-center z-50 px-0 sm:px-4">
+    <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 px-0 sm:px-4">
       <div className="bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 w-full sm:max-w-md shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
@@ -79,10 +81,7 @@ const PriceAlertModal = ({ quote, onClose }) => {
             </h2>
             <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">
               {quote.symbol} — ₹
-              {quote.currentPrice?.toLocaleString("en-IN", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
+              {quote.currentPrice?.toLocaleString("en-IN", INR_FORMAT)}
             </p>
           </div>
           <button
@@ -165,8 +164,9 @@ const PriceAlertModal = ({ quote, onClose }) => {
             {/* Info */}
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-2">
               <p className="text-blue-600 dark:text-blue-400 text-xs">
-                📧 You'll receive an email when <strong>{displaySymbol(quote.symbol)}</strong>{" "}
-                goes {condition === "above" ? "above" : "below"} ₹
+                📧 You'll receive an email when{" "}
+                <strong>{displaySymbol(quote.symbol)}</strong> goes{" "}
+                {condition === "above" ? "above" : "below"} ₹
                 {targetPrice || "___"}
               </p>
             </div>
@@ -203,10 +203,7 @@ const PriceAlertModal = ({ quote, onClose }) => {
                     <div>
                       <p className="text-gray-900 dark:text-white text-sm font-semibold">
                         {alert.condition === "above" ? "▲" : "▼"} ₹
-                        {alert.targetPrice?.toLocaleString("en-IN", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
+                        {alert.targetPrice?.toLocaleString("en-IN", INR_FORMAT)}
                       </p>
                       <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">
                         Alert when price goes{" "}

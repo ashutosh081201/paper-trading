@@ -27,6 +27,7 @@ const OrderBook = () => {
   }
 
   const handleCancel = async (id) => {
+    if (!window.confirm("Cancel this order?")) return;
     setCancellingId(id);
     try {
       await cancelLimitOrder(id);

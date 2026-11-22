@@ -219,7 +219,11 @@ const Portfolio = () => {
               Total Invested
             </p>
             <p className="text-gray-900 dark:text-white font-bold text-sm sm:text-lg truncate">
-              ₹{computedSummary.totalInvested?.toLocaleString("en-IN", INR_FORMAT)}
+              ₹
+              {computedSummary.totalInvested?.toLocaleString(
+                "en-IN",
+                INR_FORMAT,
+              )}
             </p>
           </div>
           <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 sm:p-4 shadow-sm">
@@ -227,7 +231,11 @@ const Portfolio = () => {
               Current Value
             </p>
             <p className="text-gray-900 dark:text-white font-bold text-sm sm:text-lg truncate">
-              ₹{computedSummary.totalCurrentValue?.toLocaleString("en-IN", INR_FORMAT)}
+              ₹
+              {computedSummary.totalCurrentValue?.toLocaleString(
+                "en-IN",
+                INR_FORMAT,
+              )}
             </p>
           </div>
           <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 sm:p-4 shadow-sm">
@@ -238,7 +246,10 @@ const Portfolio = () => {
               className={`font-bold text-sm sm:text-lg truncate ${computedSummary.totalProfitLoss >= 0 ? "text-green-500" : "text-red-500"}`}
             >
               {computedSummary.totalProfitLoss >= 0 ? "+" : ""}₹
-              {computedSummary.totalProfitLoss?.toLocaleString("en-IN")}
+              {computedSummary.totalProfitLoss?.toLocaleString(
+                "en-IN",
+                INR_FORMAT,
+              )}
             </p>
           </div>
           <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 sm:p-4 shadow-sm">
@@ -260,10 +271,7 @@ const Portfolio = () => {
               className={`font-bold text-sm sm:text-lg truncate ${todayPnL >= 0 ? "text-green-500" : "text-red-500"}`}
             >
               {todayPnL >= 0 ? "+" : ""}₹
-              {todayPnL.toLocaleString("en-IN", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
+              {todayPnL.toLocaleString("en-IN", INR_FORMAT)}
             </p>
             <p className="text-gray-400 text-xs mt-0.5">Live via socket</p>
           </div>
@@ -280,7 +288,11 @@ const Portfolio = () => {
                 Total Value
               </p>
               <p className="text-gray-900 dark:text-white font-bold text-sm sm:text-lg truncate">
-                ₹{positionsSummary.totalCurrentValue?.toLocaleString("en-IN", INR_FORMAT)}
+                ₹
+                {positionsSummary.totalCurrentValue?.toLocaleString(
+                  "en-IN",
+                  INR_FORMAT,
+                )}
               </p>
             </div>
             <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 sm:p-4 shadow-sm">
@@ -291,7 +303,10 @@ const Portfolio = () => {
                 className={`font-bold text-sm sm:text-lg truncate ${positionsSummary.totalProfitLoss >= 0 ? "text-green-500" : "text-red-500"}`}
               >
                 {positionsSummary.totalProfitLoss >= 0 ? "+" : ""}₹
-                {positionsSummary.totalProfitLoss?.toLocaleString("en-IN")}
+                {positionsSummary.totalProfitLoss?.toLocaleString(
+                  "en-IN",
+                  INR_FORMAT,
+                )}
               </p>
             </div>
             <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 sm:p-4 shadow-sm">
@@ -299,7 +314,11 @@ const Portfolio = () => {
                 Margin Used
               </p>
               <p className="text-yellow-500 font-bold text-sm sm:text-lg truncate">
-                ₹{positionsSummary.totalMarginUsed?.toLocaleString("en-IN", INR_FORMAT)}
+                ₹
+                {positionsSummary.totalMarginUsed?.toLocaleString(
+                  "en-IN",
+                  INR_FORMAT,
+                )}
               </p>
             </div>
             <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-3 sm:p-4 shadow-sm">
@@ -310,10 +329,7 @@ const Portfolio = () => {
                 className={`font-bold text-sm sm:text-lg truncate ${todayPnL >= 0 ? "text-green-500" : "text-red-500"}`}
               >
                 {todayPnL >= 0 ? "+" : ""}₹
-                {todayPnL.toLocaleString("en-IN", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
+                {todayPnL.toLocaleString("en-IN", INR_FORMAT)}
               </p>
             </div>
           </div>
@@ -415,7 +431,10 @@ const Portfolio = () => {
                           className={`text-sm font-bold ${holding.profitLoss >= 0 ? "text-green-500" : "text-red-500"}`}
                         >
                           {holding.profitLoss >= 0 ? "+" : ""}₹
-                          {holding.profitLoss?.toLocaleString("en-IN")}
+                          {holding.profitLoss?.toLocaleString(
+                            "en-IN",
+                            INR_FORMAT,
+                          )}
                         </p>
                         <p
                           className={`text-xs ${holding.profitLossPercent >= 0 ? "text-green-500" : "text-red-500"}`}
@@ -428,10 +447,18 @@ const Portfolio = () => {
                     <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500 dark:text-gray-400">
                       <span>Qty: {holding.quantity}</span>
                       <span>
-                        Avg: ₹{holding.avgBuyPrice?.toLocaleString("en-IN", INR_FORMAT)}
+                        Avg: ₹
+                        {holding.avgBuyPrice?.toLocaleString(
+                          "en-IN",
+                          INR_FORMAT,
+                        )}
                       </span>
                       <span>
-                        LTP: ₹{holding.currentPrice?.toLocaleString("en-IN", INR_FORMAT)}
+                        LTP: ₹
+                        {holding.currentPrice?.toLocaleString(
+                          "en-IN",
+                          INR_FORMAT,
+                        )}
                       </span>
                     </div>
                   </div>
@@ -452,10 +479,7 @@ const Portfolio = () => {
                           {holding.dayChangePercent?.toFixed(2)}% (₹
                           {(
                             holding.dayChange * holding.quantity
-                          ).toLocaleString("en-IN", {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
+                          ).toLocaleString("en-IN", INR_FORMAT)}
                           )
                         </p>
                       )}
@@ -467,15 +491,27 @@ const Portfolio = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-gray-500 dark:text-gray-400 text-xs">
-                        ₹{holding.avgBuyPrice?.toLocaleString("en-IN", INR_FORMAT)}
+                        ₹
+                        {holding.avgBuyPrice?.toLocaleString(
+                          "en-IN",
+                          INR_FORMAT,
+                        )}
                       </p>
                       <p className="text-gray-900 dark:text-white text-sm font-medium transition-all duration-300">
-                        ₹{holding.currentPrice?.toLocaleString("en-IN", INR_FORMAT)}
+                        ₹
+                        {holding.currentPrice?.toLocaleString(
+                          "en-IN",
+                          INR_FORMAT,
+                        )}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-gray-900 dark:text-white text-sm">
-                        ₹{holding.investedAmount?.toLocaleString("en-IN", INR_FORMAT)}
+                        ₹
+                        {holding.investedAmount?.toLocaleString(
+                          "en-IN",
+                          INR_FORMAT,
+                        )}
                       </p>
                     </div>
                     <div className="text-right">
@@ -483,7 +519,10 @@ const Portfolio = () => {
                         className={`text-sm font-bold transition-all duration-300 ${holding.profitLoss >= 0 ? "text-green-500" : "text-red-500"}`}
                       >
                         {holding.profitLoss >= 0 ? "+" : ""}₹
-                        {holding.profitLoss?.toLocaleString("en-IN")}
+                        {holding.profitLoss?.toLocaleString(
+                          "en-IN",
+                          INR_FORMAT,
+                        )}
                       </p>
                       <p
                         className={`text-xs ${holding.profitLossPercent >= 0 ? "text-green-500" : "text-red-500"}`}
@@ -560,7 +599,10 @@ const Portfolio = () => {
                           className={`text-sm font-bold ${position.profitLoss >= 0 ? "text-green-500" : "text-red-500"}`}
                         >
                           {position.profitLoss >= 0 ? "+" : ""}₹
-                          {position.profitLoss?.toLocaleString("en-IN")}
+                          {position.profitLoss?.toLocaleString(
+                            "en-IN",
+                            INR_FORMAT,
+                          )}
                         </p>
                         <p
                           className={`text-xs ${position.profitLossPercent >= 0 ? "text-green-500" : "text-red-500"}`}
@@ -573,10 +615,15 @@ const Portfolio = () => {
                     <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500 dark:text-gray-400">
                       <span>Qty: {position.quantity}</span>
                       <span>
-                        Buy: ₹{position.buyPrice?.toLocaleString("en-IN", INR_FORMAT)}
+                        Buy: ₹
+                        {position.buyPrice?.toLocaleString("en-IN", INR_FORMAT)}
                       </span>
                       <span className="text-yellow-500">
-                        Margin: ₹{position.marginPaid?.toLocaleString("en-IN", INR_FORMAT)}
+                        Margin: ₹
+                        {position.marginPaid?.toLocaleString(
+                          "en-IN",
+                          INR_FORMAT,
+                        )}
                       </span>
                     </div>
                   </div>
@@ -599,15 +646,24 @@ const Portfolio = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-gray-500 dark:text-gray-400 text-xs">
-                        ₹{position.buyPrice?.toLocaleString("en-IN", INR_FORMAT)}
+                        ₹
+                        {position.buyPrice?.toLocaleString("en-IN", INR_FORMAT)}
                       </p>
                       <p className="text-gray-900 dark:text-white text-sm font-medium">
-                        ₹{position.currentPrice?.toLocaleString("en-IN", INR_FORMAT)}
+                        ₹
+                        {position.currentPrice?.toLocaleString(
+                          "en-IN",
+                          INR_FORMAT,
+                        )}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-yellow-500 text-sm font-medium">
-                        ₹{position.marginPaid?.toLocaleString("en-IN", INR_FORMAT)}
+                        ₹
+                        {position.marginPaid?.toLocaleString(
+                          "en-IN",
+                          INR_FORMAT,
+                        )}
                       </p>
                     </div>
                     <div className="text-right">
@@ -615,7 +671,10 @@ const Portfolio = () => {
                         className={`text-sm font-bold ${position.profitLoss >= 0 ? "text-green-500" : "text-red-500"}`}
                       >
                         {position.profitLoss >= 0 ? "+" : ""}₹
-                        {position.profitLoss?.toLocaleString("en-IN")}
+                        {position.profitLoss?.toLocaleString(
+                          "en-IN",
+                          INR_FORMAT,
+                        )}
                       </p>
                       <p
                         className={`text-xs ${position.profitLossPercent >= 0 ? "text-green-500" : "text-red-500"}`}
@@ -699,10 +758,7 @@ const Portfolio = () => {
                     className={`font-bold text-xl sm:text-2xl ${todayPnL >= 0 ? "text-green-500" : "text-red-500"}`}
                   >
                     {todayPnL >= 0 ? "+" : ""}₹
-                    {todayPnL.toLocaleString("en-IN", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
+                    {todayPnL.toLocaleString("en-IN", INR_FORMAT)}
                   </p>
                   <p className="text-gray-400 text-xs mt-1">Live via socket</p>
                 </div>
@@ -747,6 +803,10 @@ const Portfolio = () => {
                   <div className="text-center py-4">
                     <p className="text-gray-400 text-sm">
                       Not enough data to calculate XIRR
+                    </p>
+                    <p className="text-gray-500 text-xs mt-1">
+                      XIRR appears once your delivery investments span at least
+                      30 days (intraday trades aren't included)
                     </p>
                   </div>
                 )}
@@ -828,9 +888,10 @@ const Portfolio = () => {
                             <div className="flex items-center gap-3 flex-shrink-0 ml-2">
                               <span className="text-gray-500 dark:text-gray-400 text-xs hidden sm:block">
                                 ₹
-                                {s.currentValue.toLocaleString("en-IN", {
-                                  maximumFractionDigits: 0,
-                                })}
+                                {s.currentValue.toLocaleString(
+                                  "en-IN",
+                                  INR_FORMAT,
+                                )}
                               </span>
                               <span
                                 className={`text-xs font-bold ${s.pnlPercent >= 0 ? "text-green-500" : "text-red-500"}`}
@@ -844,7 +905,7 @@ const Portfolio = () => {
                                 {s.profitLoss >= 0 ? "+" : ""}₹
                                 {Math.abs(s.profitLoss).toLocaleString(
                                   "en-IN",
-                                  { maximumFractionDigits: 0 },
+                                  INR_FORMAT,
                                 )}
                               </span>
                             </div>

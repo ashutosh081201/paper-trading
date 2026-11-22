@@ -101,7 +101,8 @@ const Transactions = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `stocklab_transactions_${new Date().toISOString().split("T")[0]}.csv`;
+    // en-CA formats as YYYY-MM-DD in the browser's own timezone
+    link.download = `stocklab_transactions_${new Date().toLocaleDateString("en-CA")}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -372,8 +373,8 @@ const Transactions = () => {
             </div>
             <div class="card">
               <div class="card-label">Worst Trade</div>
-              <div class="card-value red">-₹${Math.abs(worstTrade).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-              <div class="card-sub">Biggest single loss</div>
+              <div class="card-value red">${worstTrade < 0 ? `-₹${Math.abs(worstTrade).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}</div>
+              <div class="card-sub">${worstTrade < 0 ? "Biggest single loss" : "No losing trades"}</div>
             </div>
           </div>
 
@@ -540,7 +541,10 @@ const Transactions = () => {
                           className={`text-sm font-bold ${transaction.profitLoss >= 0 ? "text-green-500" : "text-red-500"}`}
                         >
                           {transaction.profitLoss >= 0 ? "+" : ""}₹
-                          {transaction.profitLoss?.toLocaleString("en-IN")}
+                          {transaction.profitLoss?.toLocaleString(
+                            "en-IN",
+                            INR_FORMAT,
+                          )}
                         </p>
                       ) : (
                         <p className="text-gray-400 text-sm">—</p>
@@ -573,7 +577,11 @@ const Transactions = () => {
                       Qty: {transaction.quantity}
                     </span>
                     <span className="text-gray-500 dark:text-gray-400 text-xs">
-                      ₹{transaction.buyPrice?.toLocaleString("en-IN", INR_FORMAT)}
+                      ₹
+                      {transaction.buyPrice?.toLocaleString(
+                        "en-IN",
+                        INR_FORMAT,
+                      )}
                     </span>
                     {transaction.holdingDuration && (
                       <span className="text-gray-400 text-xs">
@@ -628,11 +636,19 @@ const Transactions = () => {
 
                   <div className="text-right">
                     <p className="text-gray-900 dark:text-white text-sm">
-                      ₹{transaction.buyPrice?.toLocaleString("en-IN", INR_FORMAT)}
+                      ₹
+                      {transaction.buyPrice?.toLocaleString(
+                        "en-IN",
+                        INR_FORMAT,
+                      )}
                     </p>
                     {transaction.sellPrice && (
                       <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">
-                        Sell: ₹{transaction.sellPrice?.toLocaleString("en-IN", INR_FORMAT)}
+                        Sell: ₹
+                        {transaction.sellPrice?.toLocaleString(
+                          "en-IN",
+                          INR_FORMAT,
+                        )}
                       </p>
                     )}
                   </div>
@@ -643,13 +659,20 @@ const Transactions = () => {
                         className={`text-sm font-bold ${transaction.profitLoss >= 0 ? "text-green-500" : "text-red-500"}`}
                       >
                         {transaction.profitLoss >= 0 ? "+" : ""}₹
-                        {transaction.profitLoss?.toLocaleString("en-IN")}
+                        {transaction.profitLoss?.toLocaleString(
+                          "en-IN",
+                          INR_FORMAT,
+                        )}
                       </p>
                     ) : (
                       <p className="text-gray-400 text-sm">—</p>
                     )}
                     <p className="text-gray-400 dark:text-gray-500 text-xs mt-0.5">
-                      Bal: ₹{transaction.fundsAfter?.toLocaleString("en-IN", INR_FORMAT)}
+                      Bal: ₹
+                      {transaction.fundsAfter?.toLocaleString(
+                        "en-IN",
+                        INR_FORMAT,
+                      )}
                     </p>
                   </div>
 

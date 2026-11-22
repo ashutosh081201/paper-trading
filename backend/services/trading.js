@@ -8,6 +8,7 @@ const Order = require("../models/Order");
 const Transaction = require("../models/Transaction");
 const { HttpError } = require("../helpers/httpErrors");
 const { istDate } = require("../helpers/dates");
+const { formatINR } = require("../helpers/format");
 
 const INTRADAY_LEVERAGE = 5; // 5x leverage → 20% margin for intraday
 
@@ -30,7 +31,7 @@ const debitFunds = async (userId, amount) => {
   if (!existing) throw new HttpError(404, "User not found");
   throw new HttpError(
     400,
-    `Insufficient funds. Required: ₹${amount.toFixed(2)}, Available: ₹${existing.funds.toFixed(2)}`,
+    `Insufficient funds. Required: ${formatINR(amount)}, Available: ${formatINR(existing.funds)}`,
   );
 };
 
@@ -44,7 +45,19 @@ const formatDuration = (from, to = new Date()) => {
   return days > 0 ? `${days} days ${hours} hrs` : `${hours} hrs`;
 };
 
-const record = async ({ userId, symbol, companyName, orderType, side, quantity, price, buyPrice, profitLoss, holdingDuration, fundsAfter }) => {
+const record = async ({
+  userId,
+  symbol,
+  companyName,
+  orderType,
+  side,
+  quantity,
+  price,
+  buyPrice,
+  profitLoss,
+  holdingDuration,
+  fundsAfter,
+}) => {
   const totalAmount = round2(price * quantity);
   await Order.create({
     userId,
@@ -73,7 +86,14 @@ const record = async ({ userId, symbol, companyName, orderType, side, quantity, 
 };
 
 // BUY at `price`. Delivery debits the full amount; intraday debits 20% margin.
-const executeBuy = async ({ userId, symbol, companyName, quantity, orderType, price }) => {
+const executeBuy = async ({
+  userId,
+  symbol,
+  companyName,
+  quantity,
+  orderType,
+  price,
+}) => {
   const amount = round2(
     orderType === "intraday"
       ? (price * quantity) / INTRADAY_LEVERAGE
@@ -87,7 +107,8 @@ const executeBuy = async ({ userId, symbol, companyName, quantity, orderType, pr
       if (existing) {
         const totalQty = existing.quantity + quantity;
         existing.avgBuyPrice = round2(
-          (existing.avgBuyPrice * existing.quantity + price * quantity) / totalQty,
+          (existing.avgBuyPrice * existing.quantity + price * quantity) /
+            totalQty,
         );
         existing.quantity = totalQty;
         await existing.save();
@@ -103,7 +124,12 @@ const executeBuy = async ({ userId, symbol, companyName, quantity, orderType, pr
       }
     } else {
       const today = istDate();
-      const existing = await Position.findOne({ userId, symbol, date: today, isSquaredOff: false });
+      const existing = await Position.findOne({
+        userId,
+        symbol,
+        date: today,
+        isSquaredOff: false,
+      });
       if (existing) {
         const totalQty = existing.quantity + quantity;
         existing.buyPrice = round2(
@@ -129,8 +155,17 @@ const executeBuy = async ({ userId, symbol, companyName, quantity, orderType, pr
   }
 
   await record({
-    userId, symbol, companyName, orderType, side: "buy", quantity, price,
-    buyPrice: price, profitLoss: null, holdingDuration: null, fundsAfter: user.funds,
+    userId,
+    symbol,
+    companyName,
+    orderType,
+    side: "buy",
+    quantity,
+    price,
+    buyPrice: price,
+    profitLoss: null,
+    holdingDuration: null,
+    fundsAfter: user.funds,
   });
 
   return { amount, funds: user.funds };
@@ -138,7 +173,16 @@ const executeBuy = async ({ userId, symbol, companyName, quantity, orderType, pr
 
 // SELL at `price`. `positionFilter` lets square-off target a specific
 // (possibly older) intraday position instead of today's.
-const executeSell = async ({ userId, symbol, companyName, quantity, orderType, price, positionFilter, holdingDuration: durationLabel }) => {
+const executeSell = async ({
+  userId,
+  symbol,
+  companyName,
+  quantity,
+  orderType,
+  price,
+  positionFilter,
+  holdingDuration: durationLabel,
+}) => {
   let buyPrice;
   let holdingDuration;
   let proceeds;
@@ -165,7 +209,12 @@ const executeSell = async ({ userId, symbol, companyName, quantity, orderType, p
     holdingDuration = formatDuration(holding.buyDate);
     proceeds = price * quantity;
   } else {
-    const filter = positionFilter || { userId, symbol, date: istDate(), isSquaredOff: false };
+    const filter = positionFilter || {
+      userId,
+      symbol,
+      date: istDate(),
+      isSquaredOff: false,
+    };
     const position = await Position.findOneAndUpdate(
       { ...filter, quantity: { $gte: quantity } },
       { $inc: { quantity: -quantity } },
@@ -190,15 +239,25 @@ const executeSell = async ({ userId, symbol, companyName, quantity, orderType, p
     buyPrice = position.buyPrice;
     holdingDuration = durationLabel || "Intraday";
     // Margin comes back plus (or minus) the P&L on the full exposure
-    proceeds = (buyPrice * quantity) / INTRADAY_LEVERAGE + (price - buyPrice) * quantity;
+    proceeds =
+      (buyPrice * quantity) / INTRADAY_LEVERAGE + (price - buyPrice) * quantity;
   }
 
   const profitLoss = round2((price - buyPrice) * quantity);
   const user = await creditFunds(userId, round2(proceeds));
 
   await record({
-    userId, symbol, companyName, orderType, side: "sell", quantity, price,
-    buyPrice, profitLoss, holdingDuration, fundsAfter: user.funds,
+    userId,
+    symbol,
+    companyName,
+    orderType,
+    side: "sell",
+    quantity,
+    price,
+    buyPrice,
+    profitLoss,
+    holdingDuration,
+    fundsAfter: user.funds,
   });
 
   return { profitLoss, funds: user.funds };
@@ -207,7 +266,11 @@ const executeSell = async ({ userId, symbol, companyName, quantity, orderType, p
 // Intraday positions must not outlive their trading day. Closes positions
 // from earlier IST days (e.g. if the server was asleep at 15:20) — or all
 // open positions when `includeToday` is set by the 15:20 square-off job.
-const squareOffPositions = async ({ userId, includeToday = false, getPrice }) => {
+const squareOffPositions = async ({
+  userId,
+  includeToday = false,
+  getPrice,
+}) => {
   const today = istDate();
   const filter = {
     isSquaredOff: false,
@@ -235,7 +298,10 @@ const squareOffPositions = async ({ userId, includeToday = false, getPrice }) =>
         holdingDuration: "Intraday (auto square-off)",
       });
     } catch (error) {
-      console.error(`Square-off failed for position ${position._id}:`, error.message);
+      console.error(
+        `Square-off failed for position ${position._id}:`,
+        error.message,
+      );
     }
   }
   return positions.length;

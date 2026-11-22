@@ -7,13 +7,13 @@ const Landing = () => {
   const features = [
     {
       icon: "📈",
-      title: "500+ NSE Stocks & Indices",
-      desc: "Trade from 500+ NIFTY stocks plus 15 market indices including NIFTY 50, SENSEX, BANK NIFTY and more.",
+      title: "250+ NSE Stocks & Indices",
+      desc: "Trade 250+ popular NSE stocks (and search any NSE-listed company) plus 15 market indices including NIFTY 50, SENSEX, BANK NIFTY and more.",
     },
     {
       icon: "🔴",
       title: "Real-time Live Prices",
-      desc: "Socket.io powered live price updates every 15 seconds. Watchlist, portfolio and stock detail all update automatically.",
+      desc: "Live prices streamed from the exchange feed and pushed over Socket.io within a second or two. Watchlist, portfolio and stock detail all update automatically.",
     },
     {
       icon: "🕯️",
@@ -28,7 +28,7 @@ const Landing = () => {
     {
       icon: "💼",
       title: "Delivery & Intraday",
-      desc: "Place CNC delivery orders or MIS intraday orders with 5x leverage — just like real Zerodha/Upstox.",
+      desc: "Place CNC delivery orders or MIS intraday orders with 5x leverage — just like a real broker.",
     },
     {
       icon: "🎯",
@@ -88,10 +88,10 @@ const Landing = () => {
   ];
 
   const stats = [
-    { value: "500+", label: "NSE Stocks" },
-    { value: "15s", label: "Live Updates" },
+    { value: "250+", label: "NSE Stocks" },
+    { value: "~1s", label: "Live Updates" },
     { value: "10+", label: "Indicators" },
-    { value: "₹10L", label: "Virtual Funds" },
+    { value: "₹1L", label: "Virtual Funds" },
   ];
 
   const highlights = [
@@ -290,14 +290,14 @@ const Landing = () => {
                 {
                   step: "02",
                   icon: "💰",
-                  title: "Get ₹10L Virtual Funds",
+                  title: "Get ₹1,00,000 Virtual Funds",
                   desc: "Instantly credited. No credit card, no real money involved.",
                 },
                 {
                   step: "03",
                   icon: "📈",
                   title: "Start Trading",
-                  desc: "Browse 500+ stocks, analyse with AI, place orders and track P&L.",
+                  desc: "Browse 250+ stocks, analyse with AI, place orders and track P&L.",
                 },
               ].map((item, i) => (
                 <div
@@ -337,7 +337,7 @@ const Landing = () => {
           >
             <div className="inline-flex items-center gap-2 bg-green-500/10 border border-green-500/20 text-green-500 text-xs px-3 py-1.5 rounded-full mb-4">
               <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
-              500+ NSE Stocks • Live Prices Every 15s
+              250+ NSE Stocks • Live Prices
             </div>
             <h2
               className={`text-2xl sm:text-3xl font-bold mb-3 ${darkMode ? "text-white" : "text-gray-900"}`}

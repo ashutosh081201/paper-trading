@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { buyStock, sellStock, createLimitOrder } from "../services/api";
+import { buyStock, sellStock, createLimitOrder, getMe } from "../services/api";
 import { useNotification } from "../context/NotificationContext";
 import { INR_FORMAT } from "../utils/formatINR";
 
@@ -10,6 +10,17 @@ const OrderForm = ({ quote, orderType, onClose, onSuccess }) => {
   const [tradeType, setTradeType] = useState("delivery");
   const [quantity, setQuantity] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // The server may have changed the balance (e.g. an intraday auto
+  // square-off), so fetch it fresh whenever the form opens
+  useEffect(() => {
+    getMe()
+      .then((res) => updateFunds(res.data.user.funds))
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const sharesLabel = (n) => `${n} share${Number(n) === 1 ? "" : "s"}`;
   const [error, setError] = useState("");
 
   // Advanced options — Stop Loss + Target
@@ -85,7 +96,7 @@ const OrderForm = ({ quote, orderType, onClose, onSuccess }) => {
         limitWarnings.forEach((message) => notify(`⚠️ ${message}`, "error"));
 
         notify(
-          `✅ Bought ${quantity} shares of ${quote.symbol} at ₹${currentPrice?.toLocaleString("en-IN", INR_FORMAT)} | Total: ₹${(currentPrice * parseInt(quantity))?.toLocaleString("en-IN", INR_FORMAT)}`,
+          `✅ Bought ${sharesLabel(quantity)} of ${quote.symbol} at ₹${currentPrice?.toLocaleString("en-IN", INR_FORMAT)} | Total: ₹${(currentPrice * parseInt(quantity))?.toLocaleString("en-IN", INR_FORMAT)}`,
           "success",
         );
       } else {
@@ -103,7 +114,7 @@ const OrderForm = ({ quote, orderType, onClose, onSuccess }) => {
             : `P&L: -₹${Math.abs(profitLoss)?.toLocaleString("en-IN", INR_FORMAT)}`;
 
         notify(
-          `✅ Sold ${quantity} shares of ${quote.symbol} at ₹${currentPrice?.toLocaleString("en-IN", INR_FORMAT)} | ${plText}`,
+          `✅ Sold ${sharesLabel(quantity)} of ${quote.symbol} at ₹${currentPrice?.toLocaleString("en-IN", INR_FORMAT)} | ${plText}`,
           "success",
         );
       }
@@ -118,7 +129,7 @@ const OrderForm = ({ quote, orderType, onClose, onSuccess }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-end sm:items-center justify-center z-50 px-0 sm:px-4">
+    <div className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 px-0 sm:px-4">
       <div className="bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 w-full sm:max-w-md shadow-2xl max-h-screen overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">

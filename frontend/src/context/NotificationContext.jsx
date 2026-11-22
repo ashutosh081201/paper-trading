@@ -1,9 +1,49 @@
 import { createContext, useContext, useState } from "react";
+import { useAuth } from "./AuthContext";
 
 const NotificationContext = createContext();
 
+const MAX_NOTIFICATIONS = 50;
+
+const storageKey = (user) =>
+  user ? `stocklab_notifications_${user._id || user.id}` : null;
+
+const load = (key) => {
+  if (!key) return [];
+  try {
+    return JSON.parse(localStorage.getItem(key)) || [];
+  } catch {
+    return [];
+  }
+};
+
+const save = (key, list) => {
+  if (!key) return;
+  try {
+    localStorage.setItem(key, JSON.stringify(list));
+  } catch {
+    // storage full or blocked — notifications just won't persist
+  }
+};
+
 export const NotificationProvider = ({ children }) => {
-  const [notifications, setNotifications] = useState([]);
+  const { user } = useAuth();
+  const key = storageKey(user);
+  const [notifications, setNotificationsState] = useState(() => load(key));
+
+  // Switch to the signed-in user's saved list when the user changes
+  const [loadedKey, setLoadedKey] = useState(key);
+  if (loadedKey !== key) {
+    setLoadedKey(key);
+    setNotificationsState(load(key));
+  }
+
+  const setNotifications = (update) =>
+    setNotificationsState((prev) => {
+      const next = typeof update === "function" ? update(prev) : update;
+      save(key, next);
+      return next;
+    });
   const [showBanner, setShowBanner] = useState(false);
   const [bannerMessage, setBannerMessage] = useState("");
   const [bannerType, setBannerType] = useState("success");
@@ -17,7 +57,9 @@ export const NotificationProvider = ({ children }) => {
       read: false,
       createdAt: new Date(),
     };
-    setNotifications((prev) => [newNotification, ...prev].slice(0, 50));
+    setNotifications((prev) =>
+      [newNotification, ...prev].slice(0, MAX_NOTIFICATIONS),
+    );
 
     // Show banner
     setBannerMessage(message);

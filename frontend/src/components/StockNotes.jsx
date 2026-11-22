@@ -47,6 +47,7 @@ const StockNotes = ({ symbol, companyName }) => {
   };
 
   const handleDelete = async (id) => {
+    if (!window.confirm("Delete this note? This can't be undone.")) return;
     try {
       await deleteNote(id);
       setNotes((prev) => prev.filter((n) => n._id !== id));

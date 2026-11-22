@@ -42,6 +42,7 @@ describe("account", () => {
 
   test("add funds", async () => {
     const res = await A.post("/api/account/add-funds").send({ amount: 2500.5 }).expect(200);
+    expect(res.body.message).toMatch(/added successfully/);
     expect(res.body.funds).toBe(102500.5);
   });
 
@@ -114,7 +115,7 @@ describe("account", () => {
     const request = require("supertest");
     const app = require("../app");
     await request(app).post("/api/auth/signup").send({
-      name: "Eve", email: "eve@example.test", password: "x", funds: 1e9, isVerified: true,
+      name: "Eve", email: "eve@example.test", password: "Secret123!", funds: 1e9, isVerified: true,
     }).expect(201);
     const eve = await User.findOne({ email: "eve@example.test" });
     expect(eve.funds).toBe(100000);
@@ -212,6 +213,9 @@ describe("watchlists", () => {
     expect((await A.get("/api/watchlist/check/tcs").expect(200)).body.isInWatchlist).toBe(true);
     expect((await A.get("/api/watchlist").expect(200)).body.count).toBe(1);
     await A.post("/api/watchlist/add").send({ symbol: "TCS", companyName: "TCS" }).expect(400);
+    await A.post("/api/watchlist/add").send({ symbol: "^NSEI", companyName: "NIFTY 50" }).expect(200);
+    const dup = await A.post("/api/watchlist/add").send({ symbol: "^NSEI", companyName: "NIFTY 50" }).expect(400);
+    expect(dup.body.message).toBe("NSEI is already in your watchlist"); // no "^" in messages
     await A.delete("/api/watchlist/remove/TCS").expect(200);
     await A.delete("/api/watchlist/remove/TCS").expect(404);
     expect((await B.get("/api/watchlist/check/TCS").expect(200)).body.isInWatchlist).toBe(false);

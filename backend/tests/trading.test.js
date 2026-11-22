@@ -54,7 +54,8 @@ describe("delivery buy", () => {
 
   test("insufficient funds → 400, nothing changes", async () => {
     const res = await buy({ symbol: "TCS", quantity: 41 }).expect(400);
-    expect(res.body.message).toMatch(/Insufficient funds/);
+    // amounts use Indian digit grouping
+    expect(res.body.message).toBe("Insufficient funds. Required: ₹1,02,500.00, Available: ₹1,00,000.00");
     expect(await funds()).toBe(100000);
     expect(await Holding.countDocuments()).toBe(0);
   });

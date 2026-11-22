@@ -216,7 +216,7 @@ describe("password reset", () => {
   test("wrong OTP → 400 and password unchanged", async () => {
     const user = await createUser();
     await forgot(user.email).expect(200);
-    await reset({ email: user.email, otp: "000000", newPassword: "x" }).expect(400);
+    await reset({ email: user.email, otp: "000000", newPassword: "NewPass-99" }).expect(400);
     await login({ email: user.email, password: user.password }).expect(200);
   });
 
@@ -226,18 +226,27 @@ describe("password reset", () => {
     await forgot(user.email).expect(200);
     const otp = lastOtpFor(user.email);
     freezeDate("2026-11-04T10:11:00Z");
-    const res = await reset({ email: user.email, otp, newPassword: "x" }).expect(400);
+    const res = await reset({ email: user.email, otp, newPassword: "NewPass-99" }).expect(400);
     expect(res.body.message).toMatch(/expired/);
   });
 
   test("a verify OTP can't be used to reset a password", async () => {
     await signup({ name: "B", email: "b@example.test", password: "Secret123!" }).expect(201);
     const otp = lastOtpFor("b@example.test");
-    await reset({ email: "b@example.test", otp, newPassword: "x" }).expect(400);
+    await reset({ email: "b@example.test", otp, newPassword: "NewPass-99" }).expect(400);
   });
 
   test("missing fields → 400", async () => {
     await reset({ email: "a@b.test" }).expect(400);
+  });
+
+  test("new passwords must be at least 6 characters (signup and reset)", async () => {
+    const res = await signup({ name: "Short", email: "short@example.test", password: "12345" }).expect(400);
+    expect(res.body.message).toMatch(/at least 6 characters/);
+    const user = await createUser();
+    await forgot(user.email).expect(200);
+    await reset({ email: user.email, otp: lastOtpFor(user.email), newPassword: "12345" }).expect(400);
+    await login({ email: user.email, password: user.password }).expect(200);
   });
 });
 
@@ -249,10 +258,10 @@ describe("abuse protection", () => {
     const wrong = otp === "111111" ? "222222" : "111111";
     for (let i = 0; i < 4; i++) {
       await request(app).post("/api/auth/reset-password")
-        .send({ email: user.email, otp: wrong, newPassword: "x" }).expect(400);
+        .send({ email: user.email, otp: wrong, newPassword: "NewPass-99" }).expect(400);
     }
     await request(app).post("/api/auth/reset-password")
-      .send({ email: user.email, otp: wrong, newPassword: "x" }).expect(429);
+      .send({ email: user.email, otp: wrong, newPassword: "NewPass-99" }).expect(429);
     await request(app).post("/api/auth/reset-password")
       .send({ email: user.email, otp, newPassword: "Hacked1!" }).expect(400);
     await login({ email: user.email, password: user.password }).expect(200);
