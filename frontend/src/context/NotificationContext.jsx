@@ -26,6 +26,8 @@ const save = (key, list) => {
   }
 };
 
+let idCounter = 0;
+
 export const NotificationProvider = ({ children }) => {
   const { user } = useAuth();
   const key = storageKey(user);
@@ -51,7 +53,7 @@ export const NotificationProvider = ({ children }) => {
   const notify = (message, type = "success") => {
     // Add to notifications list
     const newNotification = {
-      id: Date.now(),
+      id: `${Date.now()}-${++idCounter}`, // unique even within one millisecond
       message,
       type,
       read: false,

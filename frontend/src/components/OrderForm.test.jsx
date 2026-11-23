@@ -13,7 +13,7 @@ vi.mock("../services/api", () => ({
   createLimitOrder: vi.fn(),
 }));
 
-import { buyStock, sellStock } from "../services/api";
+import { buyStock, sellStock, createLimitOrder } from "../services/api";
 import OrderForm from "./OrderForm";
 
 const quote = { symbol: "TCS", companyName: "TCS", currentPrice: 2500, change: 0 };
@@ -41,4 +41,17 @@ describe("order confirmation shows the price the order actually filled at", () =
     await waitFor(() => expect(notify).toHaveBeenCalled());
     expect(notify.mock.calls[0][0]).toContain("at ₹2,495.60");
   });
+});
+
+test("a rejected stop loss is the last message shown, so the pop-up isn't replaced by 'Bought…'", async () => {
+  buyStock.mockResolvedValue({ data: { currentPrice: 2500, remainingFunds: 75000 } });
+  createLimitOrder.mockRejectedValue({ response: { data: { message: "You only own 2 shares" } } });
+  render(<OrderForm quote={quote} orderType="buy" onClose={() => {}} onSuccess={() => {}} />);
+  fireEvent.change(screen.getByPlaceholderText("Enter quantity"), { target: { value: "10" } });
+  fireEvent.click(screen.getByText(/Advanced/));
+  fireEvent.change(screen.getByPlaceholderText(/below/), { target: { value: "2400" } });
+  fireEvent.submit(screen.getByPlaceholderText("Enter quantity").closest("form"));
+  await waitFor(() => expect(notify).toHaveBeenCalledTimes(2));
+  // The app shows one pop-up at a time: whatever is notified last is what the user sees
+  expect(notify.mock.calls.at(-1)[0]).toMatch(/Stop loss not set: You only own 2 shares/);
 });

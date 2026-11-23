@@ -67,3 +67,20 @@ describe("useTheme", () => {
     expect(renderTheme().result.current.darkMode).toBe(true);
   });
 });
+
+describe("notifications", () => {
+  test("two notifications in the same millisecond get different ids", async () => {
+    const { NotificationProvider, useNotification } = await import("./NotificationContext");
+    const { result } = renderHook(() => useNotification(), {
+      wrapper: ({ children }) => <AuthProvider><NotificationProvider>{children}</NotificationProvider></AuthProvider>,
+    });
+    const now = vi.spyOn(Date, "now").mockReturnValue(1_800_000_000_000);
+    act(() => {
+      result.current.notify("first");
+      result.current.notify("second");
+    });
+    now.mockRestore();
+    const ids = result.current.notifications.map((n) => n.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+});

@@ -93,8 +93,6 @@ const OrderForm = ({ quote, orderType, onClose, onSuccess }) => {
             }
           }
         }
-        limitWarnings.forEach((message) => notify(`⚠️ ${message}`, "error"));
-
         // The server fills at its own live price, which can be a tick away
         // from the one on screen — report what actually happened.
         const filledAt = res.data.currentPrice ?? currentPrice;
@@ -102,6 +100,8 @@ const OrderForm = ({ quote, orderType, onClose, onSuccess }) => {
           `✅ Bought ${sharesLabel(quantity)} of ${quote.symbol} at ₹${filledAt.toLocaleString("en-IN", INR_FORMAT)} | Total: ₹${(filledAt * parseInt(quantity)).toLocaleString("en-IN", INR_FORMAT)}`,
           "success",
         );
+        // Warnings go last: only the latest pop-up stays on screen
+        limitWarnings.forEach((message) => notify(`⚠️ ${message}`, "error"));
       } else {
         res = await sellStock({
           symbol: quote.symbol,
