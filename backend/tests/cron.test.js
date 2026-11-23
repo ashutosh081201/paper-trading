@@ -154,6 +154,46 @@ describe("limit order job", () => {
     expect((await LimitOrder.findById(body.limitOrder._id)).status).toBe("CANCELLED");
   });
 
+  test("when a stop loss fires, the paired target is cancelled (it must not sell shares bought later)", async () => {
+    await api.post("/api/orders/buy")
+      .send({ symbol: "RELIANCE", companyName: "R", quantity: 10, orderType: "delivery" }).expect(200);
+    await placeLimit({ transactionType: "sell", limitType: "STOP_LOSS", triggerPrice: 900 }).expect(201);
+    const { body } = await placeLimit({ transactionType: "sell", limitType: "TARGET", triggerPrice: 1100 }).expect(201);
+
+    market.setPrice("RELIANCE", 900);
+    await runLimitOrders(); // stop loss sells all 10 shares
+    expect((await LimitOrder.findById(body.limitOrder._id)).status).toBe("CANCELLED");
+
+    // Weeks later the user buys again; the old target must not sell these
+    await api.post("/api/orders/buy")
+      .send({ symbol: "RELIANCE", companyName: "R", quantity: 10, orderType: "delivery" }).expect(200);
+    market.setPrice("RELIANCE", 1150);
+    await runLimitOrders();
+    expect((await Holding.findOne()).quantity).toBe(10);
+  });
+
+  test("selling all shares by hand cancels that stock's pending stop loss / target", async () => {
+    await api.post("/api/orders/buy")
+      .send({ symbol: "RELIANCE", companyName: "R", quantity: 10, orderType: "delivery" }).expect(200);
+    const { body } = await placeLimit({ transactionType: "sell", limitType: "TARGET", triggerPrice: 1100 }).expect(201);
+    await api.post("/api/orders/sell")
+      .send({ symbol: "RELIANCE", companyName: "R", quantity: 10, orderType: "delivery" }).expect(200);
+    expect((await LimitOrder.findById(body.limitOrder._id)).status).toBe("CANCELLED");
+  });
+
+  test("the email for an executed stop loss says the shares were sold, at what price and the P&L", async () => {
+    await api.post("/api/orders/buy")
+      .send({ symbol: "RELIANCE", companyName: "R", quantity: 10, orderType: "delivery" }).expect(200);
+    await placeLimit({ transactionType: "sell", limitType: "STOP_LOSS", triggerPrice: 900 }).expect(201);
+    market.setPrice("RELIANCE", 890);
+    await runLimitOrders();
+    const mail = nodemailer.sentMail.at(-1);
+    expect(mail.subject).toMatch(/Stop loss executed/i);
+    expect(mail.html).toMatch(/Sold 10 shares/);
+    expect(mail.html).toMatch(/₹890\.00/);
+    expect(mail.html).toMatch(/-₹1,100\.00/);
+  });
+
   test("stays pending when the price can't be fetched", async () => {
     const { body } = await placeLimit({ transactionType: "buy", limitType: "LIMIT_BUY", triggerPrice: 2000 }).expect(201);
     market.setFailAll(true);
@@ -189,7 +229,7 @@ describe("price alert job", () => {
     market.setPrice("RELIANCE", 1050);
     await runPriceAlerts();
     expect(nodemailer.sentMail).toHaveLength(1);
-    expect(nodemailer.sentMail[0].subject).toMatch(/crossed above ₹1050/);
+    expect(nodemailer.sentMail[0].subject).toMatch(/crossed above ₹1,050\.00/);
     const alert = await PriceAlert.findOne();
     expect(alert.triggered).toBe(true);
     expect(alert.triggeredAt.toISOString()).toBe("2026-11-04T06:00:00.000Z");

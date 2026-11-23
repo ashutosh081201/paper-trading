@@ -6,6 +6,7 @@ const Holding = require("../models/Holding");
 const Position = require("../models/Position");
 const Order = require("../models/Order");
 const Transaction = require("../models/Transaction");
+const LimitOrder = require("../models/LimitOrder");
 const { HttpError } = require("../helpers/httpErrors");
 const { istDate } = require("../helpers/dates");
 const { formatINR } = require("../helpers/format");
@@ -84,6 +85,23 @@ const record = async ({
     fundsAfter,
   });
 };
+
+// A stop loss / target is tied to the shares it was placed on. Once those
+// shares are sold (by hand or by the paired order), it must not wait around
+// and sell shares bought later — the same as a broker cancelling the other
+// leg. The order currently executing is marked EXECUTED by its caller.
+const cancelUncoveredSellOrders = ({ userId, symbol, orderType, remaining }) =>
+  LimitOrder.updateMany(
+    {
+      userId,
+      symbol,
+      orderType,
+      transactionType: "sell",
+      status: "PENDING",
+      quantity: { $gt: remaining },
+    },
+    { status: "CANCELLED" },
+  );
 
 // BUY at `price`. Delivery debits the full amount; intraday debits 20% margin.
 const executeBuy = async ({
@@ -186,6 +204,7 @@ const executeSell = async ({
   let buyPrice;
   let holdingDuration;
   let proceeds;
+  let remaining;
 
   if (orderType === "delivery") {
     const holding = await Holding.findOneAndUpdate(
@@ -205,6 +224,7 @@ const executeSell = async ({
     if (holding.quantity === quantity) {
       await Holding.deleteOne({ _id: holding._id, quantity: 0 });
     }
+    remaining = holding.quantity - quantity;
     buyPrice = holding.avgBuyPrice;
     holdingDuration = formatDuration(holding.buyDate);
     proceeds = price * quantity;
@@ -236,6 +256,7 @@ const executeSell = async ({
         { isSquaredOff: true, quantity: position.quantity },
       );
     }
+    remaining = position.quantity - quantity;
     buyPrice = position.buyPrice;
     holdingDuration = durationLabel || "Intraday";
     // Margin comes back plus (or minus) the P&L on the full exposure
@@ -245,6 +266,7 @@ const executeSell = async ({
 
   const profitLoss = round2((price - buyPrice) * quantity);
   const user = await creditFunds(userId, round2(proceeds));
+  await cancelUncoveredSellOrders({ userId, symbol, orderType, remaining });
 
   await record({
     userId,

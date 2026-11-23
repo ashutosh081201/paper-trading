@@ -95,8 +95,11 @@ const OrderForm = ({ quote, orderType, onClose, onSuccess }) => {
         }
         limitWarnings.forEach((message) => notify(`⚠️ ${message}`, "error"));
 
+        // The server fills at its own live price, which can be a tick away
+        // from the one on screen — report what actually happened.
+        const filledAt = res.data.currentPrice ?? currentPrice;
         notify(
-          `✅ Bought ${sharesLabel(quantity)} of ${quote.symbol} at ₹${currentPrice?.toLocaleString("en-IN", INR_FORMAT)} | Total: ₹${(currentPrice * parseInt(quantity))?.toLocaleString("en-IN", INR_FORMAT)}`,
+          `✅ Bought ${sharesLabel(quantity)} of ${quote.symbol} at ₹${filledAt.toLocaleString("en-IN", INR_FORMAT)} | Total: ₹${(filledAt * parseInt(quantity)).toLocaleString("en-IN", INR_FORMAT)}`,
           "success",
         );
       } else {
@@ -113,8 +116,9 @@ const OrderForm = ({ quote, orderType, onClose, onSuccess }) => {
             ? `P&L: +₹${profitLoss?.toLocaleString("en-IN", INR_FORMAT)}`
             : `P&L: -₹${Math.abs(profitLoss)?.toLocaleString("en-IN", INR_FORMAT)}`;
 
+        const filledAt = res.data.currentPrice ?? currentPrice;
         notify(
-          `✅ Sold ${sharesLabel(quantity)} of ${quote.symbol} at ₹${currentPrice?.toLocaleString("en-IN", INR_FORMAT)} | ${plText}`,
+          `✅ Sold ${sharesLabel(quantity)} of ${quote.symbol} at ₹${filledAt.toLocaleString("en-IN", INR_FORMAT)} | ${plText}`,
           "success",
         );
       }

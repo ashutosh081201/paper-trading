@@ -237,7 +237,7 @@ const StockDetail = () => {
   const [liveIndicator, setLiveIndicator] = useState(false);
 
   useEffect(() => {
-    fetchQuote();
+    fetchQuote({ showSpinner: true });
   }, [symbol]);
 
   // ── Socket: subscribe to this symbol for live price ──
@@ -276,9 +276,11 @@ const StockDetail = () => {
     };
   }, [symbol]);
 
-  async function fetchQuote() {
+  // The spinner replaces the whole page (chart included), so it's only shown
+  // when opening a stock — not when refreshing after an order.
+  async function fetchQuote({ showSpinner = false } = {}) {
     try {
-      setLoading(true);
+      if (showSpinner) setLoading(true);
       const res = await getQuote(symbol);
       setQuote(res.data.quote);
     } catch {

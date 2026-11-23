@@ -2,17 +2,18 @@ const cron = require("node-cron");
 const LimitOrder = require("../models/LimitOrder");
 const User = require("../models/User");
 const { getQuote } = require("../helpers/stockHelper");
-const { sendPriceAlert } = require("../helpers/mailer");
+const { sendOrderExecuted } = require("../helpers/mailer");
 const { HttpError } = require("../helpers/httpErrors");
 const { executeBuy, executeSell } = require("./trading");
 
 const executeLimitOrder = async (limitOrder, currentPrice) => {
   const { userId, symbol, companyName, orderType, transactionType, quantity, limitType } =
     limitOrder;
+  let result;
   try {
     const trade = { userId, symbol, companyName, quantity, orderType, price: currentPrice };
-    if (transactionType === "sell") await executeSell(trade);
-    else await executeBuy(trade);
+    result =
+      transactionType === "sell" ? await executeSell(trade) : await executeBuy(trade);
   } catch (error) {
     if (!(error instanceof HttpError)) {
       console.error(`Limit order execution error for ${symbol}:`, error.message);
@@ -30,15 +31,16 @@ const executeLimitOrder = async (limitOrder, currentPrice) => {
 
   try {
     const user = await User.findById(userId);
-    await sendPriceAlert(
-      user.email,
-      user.name,
+    await sendOrderExecuted(user.email, user.name, {
+      limitType,
       symbol,
       companyName,
-      limitOrder.triggerPrice,
-      currentPrice,
-      limitType === "STOP_LOSS" ? "below" : "above",
-    );
+      quantity,
+      orderType,
+      triggerPrice: limitOrder.triggerPrice,
+      price: currentPrice,
+      profitLoss: result.profitLoss ?? null,
+    });
   } catch (_) {
     // the trade stands even if the email fails
   }
@@ -81,7 +83,8 @@ const checkLimitOrders = async () => {
         shouldExecute = currentPrice <= order.triggerPrice;
       }
 
-      if (shouldExecute) {
+      // A sibling order executed earlier in this run may have cancelled it
+      if (shouldExecute && (await LimitOrder.exists({ _id: order._id, status: "PENDING" }))) {
         await executeLimitOrder(order, currentPrice);
       }
     }

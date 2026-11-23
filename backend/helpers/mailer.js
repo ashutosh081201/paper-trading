@@ -1,5 +1,6 @@
 const nodemailer = require("nodemailer");
 const axios = require("axios");
+const { formatINR } = require("./format");
 
 const SENDER_NAME = "StockLab";
 const senderEmail = () => process.env.EMAIL_FROM || process.env.EMAIL_USER;
@@ -140,7 +141,7 @@ const sendPriceAlert = async (
   currentPrice,
   condition,
 ) => {
-  const subject = `🔔 Price Alert — ${symbol} has ${condition === "above" ? "crossed above" : "dropped below"} ₹${targetPrice}`;
+  const subject = `🔔 Price Alert — ${symbol} has ${condition === "above" ? "crossed above" : "dropped below"} ${formatINR(targetPrice)}`;
   const mailOptions = {
     to: email,
     subject,
@@ -331,4 +332,74 @@ const sendCircuitAlert = async (
   await deliver(mailOptions);
 };
 
-module.exports = { sendOTP, sendPriceAlert, sendCircuitAlert };
+
+// ── Stop loss / target / limit buy executed ─────────────────────
+const ORDER_LABELS = {
+  STOP_LOSS: "Stop loss",
+  TARGET: "Target",
+  LIMIT_BUY: "Limit buy",
+};
+const signedINR = (n) => `${n < 0 ? "-" : "+"}${formatINR(Math.abs(n))}`;
+
+const sendOrderExecuted = async (
+  email,
+  name,
+  { limitType, symbol, companyName, quantity, orderType, triggerPrice, price, profitLoss },
+) => {
+  const label = ORDER_LABELS[limitType] || "Order";
+  const isBuy = limitType === "LIMIT_BUY";
+  const shares = `${quantity} share${quantity === 1 ? "" : "s"}`;
+  const action = `${isBuy ? "Bought" : "Sold"} ${shares} of ${symbol} at ${formatINR(price)}`;
+  const pnlColor = profitLoss < 0 ? "#f87171" : "#4ade80";
+  const row = (title, value, color = "white") => `
+              <tr><td style="padding:16px 24px; border-bottom:1px solid #1e293b;">
+                <p style="margin:0; color:#64748b; font-size:12px; text-transform:uppercase;">${title}</p>
+                <p style="margin:4px 0 0; color:${color}; font-size:18px; font-weight:bold;">${value}</p>
+              </td></tr>`;
+  await deliver({
+    to: email,
+    subject: `✅ ${label} executed — ${action}`,
+    html: `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0"/></head>
+<body style="margin:0; padding:0; background-color:#0f172a; font-family: Arial, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding: 40px 20px;">
+    <tr><td align="center">
+      <table width="520" cellpadding="0" cellspacing="0" style="background-color:#1e293b; border-radius:16px; overflow:hidden; border: 1px solid #334155;">
+        <tr>
+          <td style="background: linear-gradient(135deg, #166534, #15803d); padding: 32px; text-align:center;">
+            <h1 style="margin:0; font-size:28px; color:white;">Stock<span style="color:#4ade80;">Lab</span></h1>
+            <p style="margin:8px 0 0; color:#bbf7d0; font-size:14px;">${label} executed ✅</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 36px 32px;">
+            <h2 style="margin:0 0 8px; color:white; font-size:20px;">Hi ${escapeHtml(name)},</h2>
+            <p style="margin:0 0 24px; color:#94a3b8; font-size:15px;">
+              Your ${label.toLowerCase()} order for <strong style="color:white;">${escapeHtml(companyName)} (${symbol})</strong> was triggered.
+              ${action} (${orderType === "intraday" ? "intraday" : "delivery"}).
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#0f172a; border-radius:12px; border: 1px solid #334155; overflow:hidden;">
+              ${row("Trigger price", formatINR(triggerPrice), "#f97316")}
+              ${row("Executed at", formatINR(price), "#4ade80")}
+              ${row("Quantity", shares)}
+              ${profitLoss === null || profitLoss === undefined ? "" : row("Profit / Loss", signedINR(profitLoss), pnlColor)}
+            </table>
+            <p style="margin:24px 0 0; color:#64748b; font-size:13px;">Any other pending stop loss or target on these shares has been cancelled.</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:20px 32px; background-color:#0f172a; border-top:1px solid #1e293b; text-align:center;">
+            <p style="margin:0; color:#475569; font-size:12px;">Made with ❤️ by <span style="color:#4ade80; font-weight:bold;">Ashutosh</span></p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+  });
+};
+
+module.exports = { sendOTP, sendPriceAlert, sendCircuitAlert, sendOrderExecuted };

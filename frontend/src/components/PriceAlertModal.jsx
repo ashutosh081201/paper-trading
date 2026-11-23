@@ -42,6 +42,18 @@ const PriceAlertModal = ({ quote, onClose }) => {
       return;
     }
 
+    // An alert that is already met would fire at the very next check
+    const target = parseFloat(targetPrice);
+    const price = quote.currentPrice;
+    if (condition === "above" && price >= target) {
+      setError(`${quote.symbol} is already above ₹${target.toLocaleString("en-IN", INR_FORMAT)} (now ₹${price.toLocaleString("en-IN", INR_FORMAT)}). Pick a higher price.`);
+      return;
+    }
+    if (condition === "below" && price <= target) {
+      setError(`${quote.symbol} is already below ₹${target.toLocaleString("en-IN", INR_FORMAT)} (now ₹${price.toLocaleString("en-IN", INR_FORMAT)}). Pick a lower price.`);
+      return;
+    }
+
     setLoading(true);
     try {
       await createAlert({
@@ -50,7 +62,7 @@ const PriceAlertModal = ({ quote, onClose }) => {
         targetPrice: parseFloat(targetPrice),
         condition,
       });
-      setSuccess("Alert set! You'll receive an email when price is triggered.");
+      setSuccess(`Alert set! You'll get an email when ${quote.symbol} goes ${condition} ₹${target.toLocaleString("en-IN", INR_FORMAT)}.`);
       setTargetPrice("");
       fetchAlerts();
     } catch (err) {

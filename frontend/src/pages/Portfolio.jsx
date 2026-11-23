@@ -80,7 +80,7 @@ const Portfolio = () => {
     };
   }, []);
 
-  // Socket: listen for price updates → update holdings live
+  // Socket: listen for price updates → update holdings and positions live
   useEffect(() => {
     const cleanup = onPriceUpdate((updates) => {
       setHoldings((prev) =>
@@ -108,13 +108,35 @@ const Portfolio = () => {
           };
         }),
       );
+      setPositions((prev) =>
+        prev.map((p) => {
+          const update = updates[p.symbol.toUpperCase()];
+          if (!update) return p;
+          const currentPrice = update.currentPrice;
+          const profitLoss = parseFloat(
+            ((currentPrice - p.buyPrice) * p.quantity).toFixed(2),
+          );
+          return {
+            ...p,
+            currentPrice,
+            currentValue: parseFloat((currentPrice * p.quantity).toFixed(2)),
+            profitLoss,
+            profitLossPercent: p.investedAmount
+              ? parseFloat(((profitLoss / p.investedAmount) * 100).toFixed(2))
+              : 0,
+            dayChange: update.change,
+            dayChangePercent: update.changePercent,
+          };
+        }),
+      );
     });
     return cleanup;
   }, []);
 
+  // Refreshes (every minute, or the Refresh button) update the data in
+  // place; only the first load shows the full-page spinner.
   async function fetchPortfolio() {
     try {
-      setLoading(true);
       const [holdingsRes, positionsRes, transactionsRes] = await Promise.all([
         getHoldings(),
         getPositions(),
@@ -128,11 +150,16 @@ const Portfolio = () => {
       setPositionsSummary(positionsRes.data.summary);
       setTransactions(transactionsRes.data.transactions);
 
-      // Subscribe to holding symbols for live updates
+      // Subscribe to holding and position symbols for live updates
       if (subscribedSymbolsRef.current.length > 0) {
         unsubscribeFromSymbols(subscribedSymbolsRef.current);
       }
-      const symbols = fetchedHoldings.map((h) => h.symbol);
+      const symbols = [
+        ...new Set([
+          ...fetchedHoldings.map((h) => h.symbol),
+          ...positionsRes.data.positions.map((p) => p.symbol),
+        ]),
+      ];
       subscribedSymbolsRef.current = symbols;
       if (symbols.length > 0) {
         subscribeToSymbols(symbols);
@@ -169,6 +196,18 @@ const Portfolio = () => {
       totalProfitLossPercent,
     };
   }, [holdings, holdingsSummary]);
+
+  // Positions summary recomputed from live position prices
+  const livePositionsSummary = useMemo(() => {
+    if (!positionsSummary) return null;
+    const sum = (key) =>
+      parseFloat(positions.reduce((t, p) => t + (p[key] || 0), 0).toFixed(2));
+    return {
+      ...positionsSummary,
+      totalCurrentValue: sum("currentValue"),
+      totalProfitLoss: sum("profitLoss"),
+    };
+  }, [positions, positionsSummary]);
 
   const todayPnL = computeTodayPnL(holdings);
   const xirr = computeXIRR(transactions, holdings);
@@ -289,7 +328,7 @@ const Portfolio = () => {
               </p>
               <p className="text-gray-900 dark:text-white font-bold text-sm sm:text-lg truncate">
                 ₹
-                {positionsSummary.totalCurrentValue?.toLocaleString(
+                {livePositionsSummary.totalCurrentValue?.toLocaleString(
                   "en-IN",
                   INR_FORMAT,
                 )}
@@ -300,10 +339,10 @@ const Portfolio = () => {
                 Intraday P&L
               </p>
               <p
-                className={`font-bold text-sm sm:text-lg truncate ${positionsSummary.totalProfitLoss >= 0 ? "text-green-500" : "text-red-500"}`}
+                className={`font-bold text-sm sm:text-lg truncate ${livePositionsSummary.totalProfitLoss >= 0 ? "text-green-500" : "text-red-500"}`}
               >
-                {positionsSummary.totalProfitLoss >= 0 ? "+" : ""}₹
-                {positionsSummary.totalProfitLoss?.toLocaleString(
+                {livePositionsSummary.totalProfitLoss >= 0 ? "+" : ""}₹
+                {livePositionsSummary.totalProfitLoss?.toLocaleString(
                   "en-IN",
                   INR_FORMAT,
                 )}
@@ -315,7 +354,7 @@ const Portfolio = () => {
               </p>
               <p className="text-yellow-500 font-bold text-sm sm:text-lg truncate">
                 ₹
-                {positionsSummary.totalMarginUsed?.toLocaleString(
+                {livePositionsSummary.totalMarginUsed?.toLocaleString(
                   "en-IN",
                   INR_FORMAT,
                 )}
